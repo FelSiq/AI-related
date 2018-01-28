@@ -10,7 +10,7 @@ class graph:
 				'coord': coord if coord else [0.0] * self.dimension,
 				'adj': adj if adj else {},
 				'hcost': hcost,
-				'color': 0}
+				'color': None}
 
 	def __init__(self, filepath=None, separator=' ', directed=True, 
 		geometrical=True, dimension=0, label=None):
