@@ -1,0 +1,100 @@
+node 0 51.34 120.03
+node 1 91.24 201.14
+node 2 97.43 19.02
+node 3 204.55 13.86
+node 4 145.21 28.94
+node 5 103.12 176.64
+node 6 51.04 165.91
+node 7 172.23 98.03
+node 8 158.14 148.49
+node 9 116.87 29.98
+node 10 170.94 99.01
+node 11 169.46 162.09
+node 12 31.14 215.81
+node 13 76.15 214.85
+node 14 151.41 219.19
+node 15 2.37 149.38
+node 16 122.82 175.16
+node 17 87.84 179.49
+node 18 30.34 42.4
+node 19 81.83 146.44
+node 20 49.65 161.01
+node 21 91.57 140.79
+node 22 96.51 39.24
+node 23 72.03 153.36
+node 24 120.46 81.13
+node 25 228.72 104.94
+node 26 124.6 171.27
+node 27 121.5 196.37
+node 28 220.7 99.14
+node 29 92.68 186.4
+node 30 73.89 4.78
+node 31 213.39 140.43
+node 32 149.31 151.6
+node 33 20.66 54.32
+node 34 8.3 74.11
+node 35 113.56 215.93
+node 36 88.61 99.26
+node 37 12.77 69.85
+node 38 14.74 93.66
+node 39 105.36 43.21
+edge 16 25
+edge 30 23
+edge 29 10
+edge 39 3
+edge 18 20
+edge 10 16
+edge 14 11
+edge 29 3
+edge 8 28
+edge 35 0
+edge 14 39
+edge 35 16
+edge 1 37
+edge 25 19
+edge 15 6
+edge 19 22
+edge 30 28
+edge 27 36
+edge 22 17
+edge 1 16
+edge 11 36
+edge 30 0
+edge 18 4
+edge 0 31
+edge 15 3
+edge 14 27
+edge 36 17
+edge 4 35
+edge 7 5
+edge 14 30
+edge 14 29
+edge 25 3
+edge 1 18
+edge 7 33
+edge 4 7
+edge 19 22
+edge 26 2
+edge 14 1
+edge 1 24
+edge 25 14
+edge 7 28
+edge 18 35
+edge 25 35
+edge 10 9
+edge 38 9
+edge 18 23
+edge 25 12
+edge 25 32
+edge 25 13
+edge 25 1
+edge 38 39
+edge 23 25
+edge 35 18
+edge 11 36
+edge 7 21
+edge 37 2
+edge 25 15
+edge 27 14
+edge 2 31
+edge 28 39
