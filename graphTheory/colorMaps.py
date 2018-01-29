@@ -1,95 +1,77 @@
 from graph import graph
 import sys
+import copy 
 
 class colorMaps(graph):
-	def __init__(self, filepath=None, numColors=4):
-		super().__init__(filepath)
+	def __init__(self, filepath=None, numColors=4, chooseNode=2, consider=2, rotateColors=True):
+		super().__init__(filepath=filepath, directed=False)
 		self.numColors = numColors
 		keys = self.edgeList.keys()
 		self.domain = {key : [True] * numColors for key in keys}
-		self.color = {key : 0 for key in keys}
-		self.colorSeq = ['blue', 'red', 'yellow', 'green']
+		self.color = {key : -1 for key in keys}
+		self.colorSeq = ['b', 'r', 'y', 'g']
+		self.backtracks = 0
+		self.chooseNode = chooseNode
+		self.consider = consider
+		self.rotateColors = rotateColors
 
-	def _startColorQueue(self, startAt):
-		queue = []
+	def _checkConstraints(self, curNode, c):
+		if self.consider == 2:
+			# Check only neighbors
+			for n in self.edgeList[curNode]['adj']:
+				if self.color[n] == c:
+					return False
+		return True
 
-		keys = list(self.edgeList.keys())
-		startNode = keys[0]
-		if startAt == 0: # Random
-			startNode = keys[random.randint(0, len(keys)-1)]
-		elif startAt == 1 or startAt == 2: # Less constrained
-			neighbors = len(self.edgeList[startNode]['adj'])
-			n = len(self.edgeList)
-			for i in range(n):
-				curNeighbors = len(self.edgeList[keys[i]]['adj'])
-				if (startAt == 1 and neighbors > curNeighbors) or (startAt == 2 and neighbors < curNeighbors):
-					neighbors = curNeighbors
-					startNode = keys[i]
+	def _getNextNode(self, curNode=None):
+		nextNode = curNode
+		if self.chooseNode == 2:
+			# Most constrained first
+			keyBag = sorted(list(self.edgeList.keys()), key=lambda k : len(k), reverse=True)
+		elif self.chooseNode == 3:
+			# Less constrained first
+			keyBag = sorted(list(self.edgeList.keys()), key=lambda k : len(k))
 		else:
-			print('W: unkown \'startAt\' parameter. Starting on node with index 0.')
+			# Almost 'random' selection
+			keyBag = self.color.keys()
 
-		queue.append(startNode)
-		return queue
+		for k in keyBag:
+			if self.color[k] == -1:
+				nextNode = k
+		return nextNode
 
-	def _checkConstraints(self, curNode, constraints, c):
-		# Constraints:
-		# 1 = Nothing
-		# 2 = Neighbors
-		# 3 = Propagate to neighbors til 1 constraint
-		# 4 = Propagate to neighbors
-		# 5 = Everything
-		retValue = True
+	def _genNextColors(self, callColors):
+		return [callColors.pop()] + callColors if self.rotateColors else callColors
 
-		if constraints == 1:
-			retValue = True
-		elif constraints == 2:
-			neighbors = self.edgeList[curNode]['adj']
-			for n in neighbors:
-				if sum(self.domain[n]) == 1 and self.domain[n][c]:
-					retValue = False
-		elif constraints == 3:
-			retValue = True
-		elif constraints == 4:
-			retValue = True
-		elif constraints == 5:
-			retValue = True
-		else:
-			print('E: unkown constraint ID \'', constraints, '\'.')
-			retValue = False
-		return retValue
+	def _paintGraph(self, curNode, callColors):
+		if self.color[curNode] != -1:
+			for n in self.edgeList:
+				self.edgeList[n]['color'] = self.colorSeq[self.color[n]]
+			return True
 
+		for c in callColors:
+			if self._checkConstraints(curNode, c):
+				self.color[curNode] = c
+				if self._paintGraph(
+					curNode=self._getNextNode(curNode), 
+					callColors=self._genNextColors(callColors)):
+					return True
+				self.color[curNode] = -1
+		self.backtracks += 1
+		return False
 
-	def _insertAtColorQueue(self, queue, curNode, c, startAt):
-		# Start @:
-		# 1 = Random
-		# 2 = Less constrained
-		# 3 = Most constrained
-		neighbors = self.edgeList[curNode]['adj']
-		for n in neighbors:
-			self.domain[n][c] = False
-			queue.push(n)
-		self.domain[curNode][c] = False
-		self.color[curNode] = c
-
-
-	def _translateColor(self, color):
-		return self.colorSeq[color]
-
-	def paintGraph(self, constraints=3, startAt=2):
-		queue = self._startColorQueue(startAt)
-		while len(queue):
-			curNode = queue.pop()
-			for c in range(self.numColors):
-				if self._checkConstraints(curNode, constraints, c):
-					self._insertAtColorQueue(queue, curNode, c, startAt)
-
-		for k in self.edgeList:
-			self.edgeList[k]['color'] = self._translateColor(self.color[k])
+	def paintGraph(self, plot=True, statistics=True):
+		retVal = self._paintGraph(self._getNextNode(), callColors=list(range(self.numColors)))
+		print('Status:', 'concluded successfully.' if retVal else 'failed.')
+		if statistics:
+			print('# of backtrackings:', self.backtracks)
+		if plot:
+			cm.plot(time=5.0)
+		return retVal
 
 if __name__ == '__main__':
-	if len(sys.argv) <= 1:
-		print('usage:' + sys.argv[0] + ' <filepath>')
+	if len(sys.argv) <= 2:
+		print('usage:' + sys.argv[0] + ' <filepath> <# of colors>')
 		exit(1)
-	cm = colorMaps(filepath=sys.argv[1], numColors=4)
-	cm.paintGraph(constraints=2, startAt=1)
-	cm.plot()
+	cm = colorMaps(filepath=sys.argv[1], numColors=int(sys.argv[2]), chooseNode=3)
+	cm.paintGraph('H')

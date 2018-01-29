@@ -163,7 +163,7 @@ class graph:
 		plt.scatter(x=x, y=y, color=col)
 
 		if show:
-			plt.pause(min(0.0, time))
+			plt.pause(max(0.0, time))
 
 		if returnDimensions:
 			xLims = plt.gca().get_xlim()
