@@ -8,10 +8,11 @@ Check out 1.in file as example of how you're supposed to work with it.
 """
 
 class minimax:
-	def __init__(self, filepath):
+	def __init__(self, filepath, lexicographical=True):
 		self.edges = {}
 		self.staticvals = {}
 		self.startKey = None
+		self.lexicographical = lexicographical
 		with open(filepath, 'r') as file:
 			for line in file:
 				tokens = line.strip().split(' ')
@@ -25,6 +26,8 @@ class minimax:
 
 					if not divergent in self.edges:
 						self.edges[divergent] = []
+					if not incident in self.edges:
+						self.edges[incident] = []
 
 					self.edges[divergent].append(incident)
 
@@ -41,7 +44,7 @@ class minimax:
 		return self.staticvals[state] if state in self.staticvals else random.random()
 
 	def _getNextMoves(self, state):
-		return self.edges[state]
+		return sorted(self.edges[state]) if self.lexicographical else self.edges[state]
 
 	def _minValue(self, state, depth):
 		if state in self.staticvals or depth == 0:
