@@ -1,10 +1,10 @@
 A Millicent lives in Slytherin Dungeon
 A Millicent is ambitious
-A Seamus lives in Gryffindor Tower
-A Seamus snogs Millicent
+#A Seamus lives in Gryffindor Tower
+#A Seamus snogs Millicent
 R ?x is ambitious AND ?x is a squib THEN ?x has a bad term
-R ?x lives in Griffindor Tower THEN ?x is a protagonist
+R ?x lives in Gryffindor Tower THEN ?x is a protagonist
 R ?x lives in Slytherin Dungeon THEN ?x is a villain AND ?x is ambitious
 R (?x is a protagonist OR ?x is a villain) AND ?x is ambitious THEN ?x studies alot
 R ?x studies alot AND ?x is a protagonist THEN ?x becomes Herminone's friend
-#R ?x snogs ?y AND ?x lives in Griffindor Tower AND ?y lives in Slytherin Dungeon THEN ?x has a bad term
+#R ?x snogs ?y AND ?x lives in Gryffindor Tower AND ?y lives in Slytherin Dungeon THEN ?x has a bad term

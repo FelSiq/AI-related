@@ -8,7 +8,7 @@ class RBES:
 		self.getParenthesisRegex = re.compile(r'\(([^\(\)]+)\)')
 		self.solveOperatorRegex = re.compile(r'([^*+]+)([*+])([^*+]+)')
 		self.separateResultRegex = re.compile(r'([^=]+)=([^\n]+)')
-		self.substituteVariableRegex = re.compile(r'([^\?]+)(\?[^\s]+)([^*+]+)')
+		self.substituteVariableRegex = re.compile(r'([^\(\?01*+]*)(\?[^\s]+)([^*+\)01]*)')
 		
 		getTokensRegex = re.compile(r'(A|R)\s*([^\n]+)\n?')
 
@@ -29,13 +29,31 @@ class RBES:
 						print('E: unkown token type \'' + tokenType + 
 							'\'. Must be \'A\' (Assertion) or \'R\' (Rule). Ignoring it.\n')
 
-	def _booleanLogicCheck(self, rule, assertion):
+	def _booleanLogicCheck(self, rule):
 		aux = self.separateResultRegex.match(rule)
 		requeriments = '(' + aux.group(1) + ')'
 		outcome = aux.group(2)
 
 		# Process rule with assertion
-		# self.substituteVariableRegex.search()
+		tokens = 'start'
+		who = ''
+		while tokens:
+			tokens = self.substituteVariableRegex.search(requeriments)
+			if tokens:
+				prefix = re.sub(r'[*+01()]', '', tokens.group(1))
+				variable = tokens.group(2)
+				sufix = re.sub(r'[*+01()]', '', tokens.group(3))
+
+				subFlag = False
+				for a in self.assertions:
+					if not subFlag:
+						findAssertion = re.search(re.sub(r'\s', '\s*', prefix + r'(.*)' + sufix), a)
+						if findAssertion:
+							subFlag = True
+							who = findAssertion.group(1)
+							requeriments = self.substituteVariableRegex.sub('1', requeriments, count=1)
+				if not subFlag:
+					requeriments = self.substituteVariableRegex.sub('0', requeriments, count=1) 
 
 		# Solve boolean logic expression
 		parenthesis = 'start'
@@ -44,7 +62,6 @@ class RBES:
 			parenthesis = self.getParenthesisRegex.search(requeriments)
 			if parenthesis:
 				parenthesis = parenthesis.group(1)
-				print(parenthesis)
 				# For each logic parenthesis, solve all operators
 				operation = self.solveOperatorRegex.search(parenthesis)
 				while operation: 
@@ -69,12 +86,15 @@ class RBES:
 					operation = self.solveOperatorRegex.search(parenthesis)
 				requeriments = self.getParenthesisRegex.sub(parenthesis, requeriments, count=1)
 
-		return requeriments
+		veracity = bool(int(requeriments))
+		newAssertions = re.split(r'\*', re.sub(r'\s*\?[^\s]+\s*', who, outcome))
+
+		return veracity, newAssertions
 
 	def _constructAssertion(self, rule, assertion):
 		return 'Test.'
 
-	def foward(self):
+	def foward(self, verbose=False):
 		# Algorithm (non-optimized)
 		# For each rule
 		#	For each assertion
@@ -83,14 +103,28 @@ class RBES:
 		#		fire the first one available, generating a new assertion.
 		# Repeat with the updated assertion list until no new assertions was added.
 
+		defunct = [False] * len(self.rules)
+		match = True
+		i = 0
 		while match:
-			match = None
-			for r in self.rules:
-				if not match:
-					for a in self.assertions:
-						if self._booleanLogicCheck(r, a):
-							match = self._constructAssertion(r, a)
-			self.assertions.append(match)
+			match = False
+
+			if verbose:
+				print('Iteration', i, ':', end=' ')
+				i += 1
+			for i in range(len(self.rules)):
+				if not match and not defunct[i]:
+					match, newAssertions = self._booleanLogicCheck(self.rules[i])
+					if match:
+						defunct[i] = True
+						if verbose:
+							print('Fired rule ', i)
+			if match:
+				for n in newAssertions:
+					if not n in self.assertions: 
+						self.assertions.append(n)
+			elif verbose:
+				print('No rules fired.')
 		return self.assertions
 
 
@@ -110,4 +144,4 @@ class RBES:
 
 if __name__ == '__main__':
 	system = RBES(sys.argv[1])
-	print(system._booleanLogicCheck('(1 * 0) + (1 * 1) * 0 + 1 = hold', 'blah'))
+	print(system.foward(verbose=True))
