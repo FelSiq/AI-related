@@ -46,25 +46,34 @@ class minimax:
 	def _getNextMoves(self, state):
 		return sorted(self.edges[state]) if self.lexicographical else self.edges[state]
 
-	def _minValue(self, state, depth):
-		if state in self.staticvals or depth == 0:
+	def _minValue(self, state, maxDepth):
+		if state in self.staticvals or maxDepth == 0:
 			return self._getStaticValue(state)
 		v = +math.inf
 		for s in self._getNextMoves(state):
-			v = min(v, self._maxValue(s, depth-1))
+			v = min(v, self._maxValue(s, maxDepth-1))
 		return v
 
-	def _maxValue(self, state, depth):
-		if state in self.staticvals or depth == 0:
+	def _maxValue(self, state, maxDepth):
+		if state in self.staticvals or maxDepth == 0:
 			return self._getStaticValue(state)
 		v = -math.inf
 		for s in self._getNextMoves(state):
-			v = max(v, self._minValue(s, depth-1))
+			v = max(v, self._minValue(s, maxDepth-1))
 		return v
+
+	def _firstCallMaxValue(self, state, maxDepth):
+		if state in self.staticvals or maxDepth == 0:
+			return self._getStaticValue(state)
+		v = -math.inf
+		move = None
+		for s in self._getNextMoves(state):
+			v, move = max([v, move], [self._minValue(s, maxDepth-1), s])
+		return v, move
 
 	def move(self, maxDepth=-1):
 		if self.startKey:
-			return self._maxValue(self.startKey, maxDepth)
+			return self._firstCallMaxValue(self.startKey, maxDepth)
 		print('No start node specified. Please define it on input file (start ?X).')
 		return None
 
@@ -72,5 +81,5 @@ if __name__ == '__main__':
 	if len(sys.argv) <= 1:
 		print('usage:', sys.argv[0], '<input file>')
 		exit(1) 
-	bestMove = minimax(sys.argv[1]).move()
-	print(bestMove)
+	bestScore, bestMove = minimax(sys.argv[1]).move()
+	print('Best Score:', bestScore, '\tBest Move:', bestMove)
