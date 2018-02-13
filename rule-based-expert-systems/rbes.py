@@ -5,10 +5,11 @@ class RBES:
 	def __init__(self, filepath):
 		self.assertions = []
 		self.rules = []
-		self.getParenthesisRegex = re.compile(r'\(([^\(\)]+)\)')
-		self.solveOperatorRegex = re.compile(r'([^*+]+)([*+])([^*+]+)')
-		self.separateResultRegex = re.compile(r'([^=]+)=([^\n]+)')
-		self.substituteVariableRegex = re.compile(r'([^\(\?01*+]*)(\?[^\s]+)([^*+\)01]*)')
+		self.getParenthesisRegex = re.compile(r'\{([^\{\}]+)\}')
+		self.solveOperatorRegex = re.compile(r'([10])\s*([@#])\s*([10])')
+		self.separateResultRegex = re.compile(r'([^=]+)=(.*)')
+		self.findVariables = re.compile(r'(\?[^\s\{\}])')
+		# self.substituteVariableRegex = re.compile(r'([^\(\?01*+]*)(\?[^\s]+)([^*+\)01]*)')
 		
 		getTokensRegex = re.compile(r'(A|R)\s*([^\n]+)\n?')
 
@@ -22,8 +23,18 @@ class RBES:
 					if tokenType == 'A':
 						self.assertions.append(tokenValue)
 					elif tokenType == 'R':
-						tokenValue = re.sub(r'\s+', ' ', re.sub('THEN', '=', 
-							re.sub('OR', '+', re.sub('AND', '*', tokenValue))))
+						tokenValue = re.sub(r'\(', '{', tokenValue)
+						tokenValue = re.sub(r'\)', '}', tokenValue)
+						tokenValue = '{' + re.sub(r'\s+', ' ', re.sub(r'\s+THEN\s+', '}={', 
+							re.sub(r'\s+OR\s+', '}#{', re.sub(r'\s+AND\s+', '}@{', tokenValue)))) + '}'
+
+						variables = set(self.findVariables.findall(tokenValue))
+						ID = 1
+						for v in variables:
+							tokenValue = re.sub('\\'+v, r'([^\s]+)', tokenValue)
+							# tokenValue = re.sub('\\'+v, r'([^\s]+)', tokenValue, count=1)
+							# tokenValue = re.sub('\\'+v, r'\\' + str(ID), tokenValue)
+							ID += 1
 						self.rules.append(tokenValue)
 					else:
 						print('E: unkown token type \'' + tokenType + 
@@ -31,29 +42,10 @@ class RBES:
 
 	def _booleanLogicCheck(self, rule):
 		aux = self.separateResultRegex.match(rule)
-		requeriments = '(' + aux.group(1) + ')'
+		requeriments = '{' + aux.group(1) + '}'
 		outcome = aux.group(2)
 
-		# Process rule with assertion
-		tokens = 'start'
-		who = ''
-		while tokens:
-			tokens = self.substituteVariableRegex.search(requeriments)
-			if tokens:
-				prefix = re.sub(r'[*+01()]', '', tokens.group(1))
-				variable = tokens.group(2)
-				sufix = re.sub(r'[*+01()]', '', tokens.group(3))
-
-				subFlag = False
-				for a in self.assertions:
-					if not subFlag:
-						findAssertion = re.search(re.sub(r'\s', '\s*', prefix + r'(.*)' + sufix), a)
-						if findAssertion:
-							subFlag = True
-							who = findAssertion.group(1)
-							requeriments = self.substituteVariableRegex.sub('1', requeriments, count=1)
-				if not subFlag:
-					requeriments = self.substituteVariableRegex.sub('0', requeriments, count=1) 
+		who = []
 
 		# Solve boolean logic expression
 		parenthesis = 'start'
@@ -62,19 +54,31 @@ class RBES:
 			parenthesis = self.getParenthesisRegex.search(requeriments)
 			if parenthesis:
 				parenthesis = parenthesis.group(1)
+				pattern = re.match(r'[^#@01]+', parenthesis)
+				while pattern:
+					result = '0'
+					for a in self.assertions:
+						if result == '0':
+							checkAssertion = re.match(pattern.group(0), a)
+							result = '1' if checkAssertion else '0'
+							if checkAssertion:
+								who = checkAssertion.group(1)
+					parenthesis = re.sub(r'[^#@01]+', result, parenthesis, count=1)
+					pattern = re.match(r'[^#@01]+', parenthesis)
+
 				# For each logic parenthesis, solve all operators
 				operation = self.solveOperatorRegex.search(parenthesis)
 				while operation: 
 					# For each operation, substitute it with a logical result value
-					operandA = bool(int(operation.group(1)))
+					operandA = operation.group(1)
 					operator = operation.group(2)
-					operandB = bool(int(operation.group(3)))
+					operandB = operation.group(3)
 
 					result = '0'
-					if operator == '+':
+					if operator == '#':
 						# OR operator
 						result = '1' if (operandA or operandB) else '0'
-					elif operator == '*':
+					elif operator == '@':
 						# AND Operator
 						result = '1' if (operandA and operandB) else '0'
 					else:
@@ -87,12 +91,10 @@ class RBES:
 				requeriments = self.getParenthesisRegex.sub(parenthesis, requeriments, count=1)
 
 		veracity = bool(int(requeriments))
-		newAssertions = re.split(r'\*', re.sub(r'\s*\?[^\s]+\s*', who, outcome))
+		print(outcome)
+		newAssertions = re.split(r'@', re.sub(r'\(\[\^\\s\]\+\)', who, re.sub('{|}', '', outcome)))
 
 		return veracity, newAssertions
-
-	def _constructAssertion(self, rule, assertion):
-		return 'Test.'
 
 	def foward(self, verbose=False):
 		# Algorithm (non-optimized)
@@ -105,13 +107,13 @@ class RBES:
 
 		defunct = [False] * len(self.rules)
 		match = True
-		i = 0
+		k = 0
 		while match:
 			match = False
 
 			if verbose:
-				print('Iteration', i, ':', end=' ')
-				i += 1
+				print('Iteration', k, ':', end=' ')
+				k += 1
 			for i in range(len(self.rules)):
 				if not match and not defunct[i]:
 					match, newAssertions = self._booleanLogicCheck(self.rules[i])
