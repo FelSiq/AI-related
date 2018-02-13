@@ -35,7 +35,9 @@ class graph:
 					if geometrical and len(tokens) < 4:
 						weight = self._calcDist(nodeA, nodeB)
 					else:
-						weight = float(tokens[3])
+						weight = 0.0
+						if len(tokens) > 3:
+							weight = float(tokens[3])
 
 					self.edgeList[nodeA]['adj'][nodeB] = weight
 					if not directed:
@@ -276,30 +278,22 @@ class informedSearch(graph):
 	It's a Beam Search with keptChildren = 1.
 	"""
 	def hillClimbing(self, start, end, prune=True, 
-		statisticOutput=False, plot=False, plotSpeed=0.2, lexicographical=True):
-		if not self.geometrical:
-			print('error: hillClimbing works only with',
-				'coordinate systems (graph is in space with null dimension).')
-			return None
-		return self._informedSearch(start, end, prune, 
-			statisticOutput, 1, plot, plotSpeed, 'Hill Climbing algorithm',lexicographical)
+		statisticOutput=False, plot=False, plotSpeed=0.2, lexicographical=True, stackPathLength=False):
+		return self._informedSearch(start, end, prune, statisticOutput, 1, plot, 
+			plotSpeed, 'Hill Climbing algorithm',lexicographical,stackPathLength)
 
 	"""
 	Beam Search is like BFS, but it does only keep w childrens that is 
 	closer to the goal per search tree level.
 	"""
 	def beamSearch(self, start, end, keptChildren=3, prune=True, 
-		statisticOutput=False, plot=False, plotSpeed=0.2, lexicographical=True):
-		if not self.geometrical:
-			print('error: beamSearch works only with',
-				'coordinate systems (graph is in space with null dimension).')
-			return None
-		return self._informedSearch(start, end, prune, 
-			statisticOutput, keptChildren, plot, plotSpeed, 'Beam Search algorithm',lexicographical)
+		statisticOutput=False, plot=False, plotSpeed=0.2, lexicographical=True, stackPathLength=False):
+		return self._informedSearch(start, end, prune, statisticOutput, keptChildren, 
+			plot, plotSpeed, 'Beam Search algorithm',lexicographical,stackPathLength)
 
 	def _informedSearch(self, start, end, prune=True, 
 		statisticOutput=False, keptChildrens=1, plot=False, plotSpeed=0.2, 
-		title='Generic Informed Search algorithm', lexicographical=True):
+		title='Generic Informed Search algorithm', lexicographical=True, stackPathLength=False):
 		output = self._genOutput()
 
 		if plot:
@@ -317,7 +311,10 @@ class informedSearch(graph):
 			if not len(curLevelNodes):
 				# Sort based on which children node is heuristically closer to the objective,
 				# then use lexicographical order in case of draw.
-				childrenNodes.sort(key=lambda item : item[1] + item[2], reverse=True)
+				if stackPathLength:
+					childrenNodes.sort(key=lambda item : item[1] + item[2], reverse=True)
+				else:
+					childrenNodes.sort(key=lambda item : item[2], reverse=True)
 
 				size = len(childrenNodes)
 				if size > keptChildrens:
@@ -352,7 +349,7 @@ class informedSearch(graph):
 					for a in adjList:
 						if curPath.find(a) == -1:
 							output['totalChildrens'] += statisticOutput
-							if self.edgeList[a]['hcost']['enabled']:
+							if not self.geometrical or self.edgeList[a]['hcost']['enabled']:
 								heuristicCost = self.edgeList[a]['hcost']['cost']
 							else:
 								heuristicCost = self._calcDist(a, end)
@@ -377,11 +374,7 @@ class branchAndBound(graph):
 	"""
 	def branchAndBound(self, start, end, prune=False, admissibleHeuristic=False, 
 		statisticOutput=False, plot=False, plotSpeed=0.2, title='Branch and Bound algorithm', lexicographical=True):
-		if admissibleHeuristic and not self.geometrical:
-			print('error: a admissible heuristic works only with',
-				'coordinate systems (graph is in space with null dimension).')
-			return None
-		
+	
 		if plot:
 			self._searchPlotSetup(title + (' (prunned)' if prune else ''), start, end)
 
@@ -426,7 +419,13 @@ class branchAndBound(graph):
 								totalDist = accumulatedDist + self.edgeList[curNode]['adj'][a]
 								if totalDist < minPathLen:
 									output['totalChildrens'] += statisticOutput
-									newChildren = (a, totalDist, self._calcDist(a, end), curPath + a)
+
+									if not self.geometrical or self.edgeList[a]['hcost']['enabled']:
+										heuristicCost = self.edgeList[a]['hcost']['cost']
+									else:
+										heuristicCost = self._calcDist(a, end)
+
+									newChildren = (a, totalDist, heuristicCost, curPath + a)
 									minHeap.append(newChildren)
 									if a == end:
 										winnerPath = curPath + a

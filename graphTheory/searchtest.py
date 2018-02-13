@@ -23,9 +23,12 @@ if __name__ == '__main__':
 	if len(sys.argv) >= 6:
 		plotDelay = float(sys.argv[5])
 
-	Ga = blindSearch(sys.argv[1], geometrical = True, directed=False)
-	Gb = informedSearch(sys.argv[1], geometrical = True, directed=False)
-	Gc = branchAndBound(sys.argv[1], geometrical = True, directed=False)
+	geometrical = False
+	directed = True
+
+	Ga = blindSearch(sys.argv[1], geometrical=geometrical, directed=directed)
+	Gb = informedSearch(sys.argv[1], geometrical=geometrical, directed=directed)
+	Gc = branchAndBound(sys.argv[1], geometrical=geometrical, directed=directed)
 	Ga.print()
 
 	if not (start in Ga.edgeList and end in Ga.edgeList):
@@ -34,7 +37,7 @@ if __name__ == '__main__':
 
 	print('\n')
 
-	searches = {'BFS':False, 'DFS':False, 'HC':False, 'BS':False, 'BB':False, 'AStar':False}
+	searches = {'BFS':False, 'DFS':False, 'HC':True, 'BS':True, 'BB':True, 'AStar':True}
 
 	if searches['BFS']:
 		printSearchOutput('BFS', Ga.bfs(start, end, prune=False, lexicographical=True, 

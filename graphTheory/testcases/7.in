@@ -1,0 +1,29 @@
+node M
+node A
+node B
+node C
+node D
+node E
+node R
+edge M A 5
+edge M B 8
+edge M D 4
+edge M E 1
+edge A B 2
+edge A R 30
+edge B A 1
+edge B C 12
+edge B E 3
+edge B D 3
+edge E R 40
+edge D R 21
+edge D E 5
+edge C E 2
+edge C D 6
+hcost M 25
+hcost B 30
+hcost A 40
+hcost C 30
+hcost R 0
+hcost D 35
+hcost E 2
