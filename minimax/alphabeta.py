@@ -48,7 +48,7 @@ class alphabeta(minimax):
 		move = None
 		for s in self._getNextMoves(state):
 			returnedValue = self._minValue(s, maxDepth-1, alpha, beta)
-			if alpha < returnedValue:
+			if (move == None and alpha <= returnedValue) or alpha < returnedValue:
 				alpha = returnedValue
 				move = s
 
@@ -58,22 +58,36 @@ class alphabeta(minimax):
 
 		return alpha, move
 
-	def move(self, maxDepth=-1, statistics=False):
+	def move(self, maxDepth=-1, statistics=False, alpha=-math.inf, beta=math.inf):
 		if self.startKey:
-			bestScore = self._firstCallMaxValue(self.startKey, maxDepth, -math.inf, math.inf)
+			bestScore = self._firstCallMaxValue(self.startKey, maxDepth, alpha, beta)
 			if statistics:
 				print('# of prunes:', self.prunes)
-				print('Prunned node list:')
+				print('Prunned node list:', end=' ')
 				for p in self.visited:
 					if not self.visited[p]:
-						print(p)
+						print(p, end=' ')
+				print()
+
+				print('Static evaluations order:', end=' ')
+				for p in self.staticEvalsList:
+					print(p, end=' ')
+				print()
 			return bestScore
 		print('No start node specified. Please define it on input file (start ?X).')
 		return None
 
 if __name__ == '__main__':
 	if len(sys.argv) <= 1:
-		print('usage:', sys.argv[0], '<input file>')
+		print('usage:', sys.argv[0], '<input file> <alpha (optional)> <beta (optional)')
 		exit(1) 
-	bestScore, bestMove = alphabeta(sys.argv[1]).move(statistics=True)
+
+	alpha = -math.inf
+	beta = +math.inf
+	if len(sys.argv) >= 3: 
+		alpha = int(sys.argv[2])
+	if len(sys.argv) >= 4: 
+		beta = int(sys.argv[3])
+	print('Initial alpha:', alpha, '\tInitial beta:', beta)
+	bestScore, bestMove = alphabeta(sys.argv[1]).move(statistics=True, alpha=alpha, beta=beta)
 	print('Best Score:', bestScore, '\tBest Move:', bestMove)

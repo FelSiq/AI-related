@@ -1,0 +1,19 @@
+start A
+edge A B
+edge A C
+edge B D
+edge B E
+edge C F
+edge C G
+edge D H
+edge E I
+edge E J
+edge E K
+edge F L
+edge G M
+static H 5
+static I 4
+static J 9
+static K 13
+static L 3
+static M 10

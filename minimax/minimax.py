@@ -13,6 +13,7 @@ class minimax:
 		self.staticvals = {}
 		self.startKey = None
 		self.lexicographical = lexicographical
+		self.staticEvalsList = []
 		with open(filepath, 'r') as file:
 			for line in file:
 				tokens = line.strip().split(' ')
@@ -41,6 +42,7 @@ class minimax:
 					print('E: unknown token \'' + tokens[0] + '\'. Ignoring it.')
 
 	def _getStaticValue(self, state):
+		self.staticEvalsList.append(state)
 		return self.staticvals[state] if state in self.staticvals else random.random()
 
 	def _getNextMoves(self, state):
